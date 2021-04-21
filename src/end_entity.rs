@@ -12,9 +12,10 @@
 // ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
 // OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 
+use core::convert::TryFrom;
 use crate::{
     cert, name, signed_data, verify_cert, DnsNameRef, Error, SignatureAlgorithm, Time,
-    TlsClientTrustAnchors, TlsServerTrustAnchors,
+    TLSClientTrustAnchors, TLSServerTrustAnchors,
 };
 
 #[cfg(feature = "alloc")]
@@ -59,7 +60,7 @@ pub struct EndEntityCert<'a> {
     inner: cert::Cert<'a>,
 }
 
-impl<'a> core::convert::TryFrom<&'a [u8]> for EndEntityCert<'a> {
+impl<'a> TryFrom<&'a [u8]> for EndEntityCert<'a> {
     type Error = Error;
 
     /// Parse the ASN.1 DER-encoded X.509 encoding of the certificate
@@ -75,6 +76,11 @@ impl<'a> core::convert::TryFrom<&'a [u8]> for EndEntityCert<'a> {
 }
 
 impl<'a> EndEntityCert<'a> {
+    #[deprecated(note = "Use TryFrom::try_from")]
+    pub fn from(cert_der: &'a [u8]) -> Result<Self, Error> {
+        TryFrom::try_from(cert_der)
+    }
+
     pub(super) fn inner(&self) -> &cert::Cert {
         &self.inner
     }
@@ -92,7 +98,7 @@ impl<'a> EndEntityCert<'a> {
     pub fn verify_is_valid_tls_server_cert(
         &self,
         supported_sig_algs: &[&SignatureAlgorithm],
-        &TlsServerTrustAnchors(trust_anchors): &TlsServerTrustAnchors,
+        &TLSServerTrustAnchors(trust_anchors): &TLSServerTrustAnchors,
         intermediate_certs: &[&[u8]],
         time: Time,
     ) -> Result<(), Error> {
@@ -124,7 +130,7 @@ impl<'a> EndEntityCert<'a> {
     pub fn verify_is_valid_tls_client_cert(
         &self,
         supported_sig_algs: &[&SignatureAlgorithm],
-        &TlsClientTrustAnchors(trust_anchors): &TlsClientTrustAnchors,
+        &TLSClientTrustAnchors(trust_anchors): &TLSClientTrustAnchors,
         intermediate_certs: &[&[u8]],
         time: Time,
     ) -> Result<(), Error> {
